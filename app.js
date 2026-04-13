@@ -79,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 保存定位供下次加载使用
             localStorage.setItem('my_location', JSON.stringify({ lat, lon, city: cityName }));
+
+            // 自动将天气插入今日小记
+            if (typeof autoAnnotateWeather === 'function') {
+                autoAnnotateWeather(weatherIconEl.textContent, current.temperature, cityName);
+            }
         } catch (error) {
             weatherInfoEl.textContent = '获取失败';
         }
@@ -108,6 +113,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const todoList = document.getElementById('todo-list');
 
     let todos = JSON.parse(localStorage.getItem('my_todos')) || [];
+    let isTodoExpanded = false;
+
+    // 辅助函数：获取当天的 YYYY-MM-DD
+    function getTodayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // 数据平滑升级：对早期不支持日期的待办数据进行自动补全
+    todos = todos.map(t => {
+        if (!t.createdAt) t.createdAt = getTodayString();
+        if (t.completed && !t.completedAt) t.completedAt = getTodayString();
+        return t;
+    });
 
     function saveTodos() {
         localStorage.setItem('my_todos', JSON.stringify(todos));
@@ -115,23 +134,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTodos() {
         todoList.innerHTML = '';
-        todos.forEach((todo, index) => {
+        const today = getTodayString();
+        
+        // 过滤：已完成且完成日期不在今天的待办将会被隐藏
+        let displayTodos = todos.map((todo, index) => ({ todo, index })) // 保留原始索引以便操作
+                            .filter(item => !item.todo.completed || item.todo.completedAt === today);
+        
+        // 排序：未完成在前，已完成在后
+        displayTodos.sort((a, b) => {
+            if (a.todo.completed === b.todo.completed) return 0;
+            return a.todo.completed ? 1 : -1;
+        });
+
+        // 处理折叠逻辑
+        const limit = isTodoExpanded ? displayTodos.length : 5;
+        const pagedTodos = displayTodos.slice(0, Math.min(limit, displayTodos.length));
+
+        pagedTodos.forEach((item) => {
+            const { todo, index: originalIndex } = item;
             const li = document.createElement('li');
             li.className = `todo-item ${todo.completed ? 'completed' : ''}`;
             
+            const datesInfo = `<div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">
+                创建于: ${todo.createdAt}${todo.completed ? ' | 完成于: ' + todo.completedAt : ''}
+            </div>`;
+
             li.innerHTML = `
-                <div class="todo-content" onclick="toggleTodo(${index})">
-                    <input type="checkbox" ${todo.completed ? 'checked' : ''}>
-                    <span>${todo.text}</span>
+                <div class="todo-content" onclick="toggleTodo(${originalIndex})" style="width: 100%;">
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleTodo(${originalIndex});">
+                    <div style="display: flex; flex-direction: column;">
+                        <span>${todo.text}</span>
+                        ${datesInfo}
+                    </div>
                 </div>
-                <button class="delete-btn" onclick="deleteTodo(${index})">删除</button>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteTodo(${originalIndex});" style="flex-shrink: 0;">删除</button>
             `;
             todoList.appendChild(li);
         });
+
+        // 渲染折叠/展开按钮
+        const oldToggleBtn = document.getElementById('todo-toggle-btn');
+        if (oldToggleBtn) oldToggleBtn.remove();
+
+        if (displayTodos.length > 5) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.id = 'todo-toggle-btn';
+            toggleBtn.className = 'icon-btn';
+            toggleBtn.style.width = '100%';
+            toggleBtn.style.padding = '8px';
+            toggleBtn.style.marginTop = '10px';
+            toggleBtn.style.backgroundColor = 'transparent';
+            toggleBtn.style.color = 'var(--text-secondary)';
+            toggleBtn.style.border = '1px dashed var(--border-color)';
+            toggleBtn.style.borderRadius = 'var(--border-radius)';
+            toggleBtn.textContent = isTodoExpanded ? '折叠列表 ▴' : `展开余下 ${displayTodos.length - 5} 项 ▾`;
+            
+            toggleBtn.onclick = () => {
+                isTodoExpanded = !isTodoExpanded;
+                renderTodos();
+            };
+            
+            // 将按钮插入到 todoList 的后面
+            todoList.parentNode.insertBefore(toggleBtn, todoList.nextSibling);
+        }
+        
+        // 当待办状态发生改变时（可能有新日期的待办加入/完成），通知日历重绘。
+        // 使用 setTimeout 以避免在初始加载时触发下面 let 变量未解析的 TDZ 错误。
+        setTimeout(() => {
+            if (typeof renderCalendar === 'function') {
+                renderCalendar();
+            }
+        }, 0);
     }
 
     window.toggleTodo = function(index) {
         todos[index].completed = !todos[index].completed;
+        if (todos[index].completed) {
+            todos[index].completedAt = getTodayString(); // 记录完成时间
+        } else {
+            delete todos[index].completedAt; // 撤销完成时清除时间
+        }
         saveTodos();
         renderTodos();
     };
@@ -145,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function addTodo() {
         const text = todoInput.value.trim();
         if (text) {
-            todos.push({ text, completed: false });
+            todos.push({ text, completed: false, createdAt: getTodayString() });
             todoInput.value = '';
             saveTodos();
             renderTodos();
@@ -211,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
         notesEl.value = savedData;
         
         if (selectedDateStr === todayStr) {
-            notesHintEl.textContent = '写下今天的感悟吧，数据会自动保存在本地。支持 Markdown 语法。';
+            notesHintEl.textContent = '写下今天的感悟吧，数据会自动保存在本地。';
             // 选中的是今天时，默认是编辑模式
             setPreviewMode(false);
         } else {
@@ -334,7 +416,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // 检查这一天是否有日记
         const noteData = localStorage.getItem('notes_' + dateStr);
         if (noteData && noteData.trim() !== '') {
-            el.classList.add('has-notes'); // 添加红点标记
+            el.classList.add('has-notes'); // 添加日记红点标记
+        }
+        
+        // 检查这一天是否有未完成的待办事项（或者创建与这一天的待办）
+        const hasTodos = todos.some(t => t.createdAt === dateStr && !t.completed);
+        if (hasTodos) {
+            el.classList.add('has-todos'); // 添加待办绿点标记
         }
         
         el.addEventListener('click', () => {
@@ -435,7 +523,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        let mdContent = `# ${selectedDateStr} \n\n${content}`;
+        let mdContent = content;
+        if (!mdContent.startsWith(`# ${selectedDateStr}`)) {
+            mdContent = `# ${selectedDateStr}\n\n` + mdContent;
+        }
         downloadFile(`note_${selectedDateStr}.md`, mdContent, 'text/markdown');
     });
 
@@ -465,7 +556,14 @@ document.addEventListener('DOMContentLoaded', () => {
         mergedContent += `导出时间：${formatDateString(new Date())}\n\n`;
         
         allNotes.forEach(note => {
-            mergedContent += `---\n\n## ${note.date}\n\n${note.content}\n\n`;
+            let noteContent = note.content;
+            if (noteContent.startsWith(`# ${note.date}`)) {
+                // 如果自带H1标题，合并时转为H2
+                noteContent = noteContent.replace(new RegExp(`^# ${note.date}`), `## ${note.date}`);
+            } else {
+                noteContent = `## ${note.date}\n\n` + noteContent;
+            }
+            mergedContent += `---\n\n${noteContent}\n\n`;
         });
         
         downloadFile(`all_notes_${formatDateString(new Date())}.md`, mergedContent, 'text/markdown');
@@ -524,5 +622,50 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsText(file);
     });
+
+    // === 6. 自动天气标注 ===
+    function autoAnnotateWeather(icon, temp, city) {
+        const weatherStamp = `# ${todayStr}\n> 📍 位置：${city} | 🌡️ 天气：${icon} ${temp}°C\n\n`;
+        const key = 'notes_' + todayStr;
+        let todayNotes = localStorage.getItem(key) || '';
+        
+        // 匹配已有的天气标注：以 "> 📍 位置：" 开头的一行（前面可能带有带日期的标题）
+        const weatherReg = /^(?:# \d{4}-\d{2}-\d{2}\n)?(?:> 📍 位置：.*? \| 🌡️ 天气：.*?\n*)/;
+
+        if (weatherReg.test(todayNotes)) {
+            // 如果已存在且内容未变，则无需更新
+            if (todayNotes.startsWith(weatherStamp)) return;
+            todayNotes = todayNotes.replace(weatherReg, weatherStamp);
+        } else if (todayNotes.trim() === '') {
+            todayNotes = weatherStamp;
+        } else if (!todayNotes.startsWith(`# ${todayStr}`)) {
+            todayNotes = weatherStamp + todayNotes;
+        } else {
+            // 只有标题，把天气插进去
+            todayNotes = todayNotes.replace(new RegExp(`^# ${todayStr}\n*`), weatherStamp);
+        }
+
+        localStorage.setItem(key, todayNotes);
+
+        // 如果用户正好停留在今天的小记页面，我们直接更新文本区显示
+        if (selectedDateStr === todayStr) {
+            const start = notesEl.selectionStart;
+            const end = notesEl.selectionEnd;
+            // 更新节点内容
+            notesEl.value = todayNotes;
+            
+            // 如果用户正在编辑文本，恢复选区，避免光标跳跃(需要校正新增字符带来的偏移)
+            if (document.activeElement === notesEl) {
+                // 如果刚好替换，长度差可能不多，但为求严谨可暂不处理极端情况
+                notesEl.setSelectionRange(start, end);
+            }
+            if (isPreviewMode) {
+                updateMarkdownPreview();
+            }
+        }
+        
+        // 刷新日历中的小记标记
+        renderCalendar();
+    }
 
 });

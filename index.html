@@ -16,6 +16,10 @@
                 <h1 id="current-time">00:00:00</h1>
                 <p id="current-date">正在加载日期...</p>
             </div>
+            <div class="title-section">
+                <h1 class="app-title">Flavalon</h1>
+                <p class="app-subtitle">A place for peace.</p>
+            </div>
             <div class="weather-section">
                 <div id="weather-icon">🌤️</div>
                 <div id="city-info">未定位</div>
@@ -88,11 +92,12 @@
                         <h2>📖 每日小记</h2>
                         <button id="toggle-preview-btn" class="icon-btn">预览</button>
                     </div>
-                    <p class="notes-hint" id="notes-hint">写下今天的感悟吧，数据会自动保存在本地。支持 Markdown 语法。</p>
+                    <p class="notes-hint" id="notes-hint"></p>
                     <div id="md-toolbar" class="md-toolbar">
                         <button type="button" class="toolbar-btn" data-prefix="**" data-suffix="**" title="粗体" aria-label="粗体">B</button>
                         <button type="button" class="toolbar-btn" data-prefix="*" data-suffix="*" title="斜体" aria-label="斜体">I</button>
                         <button type="button" class="toolbar-btn" data-prefix="# " data-suffix="" title="标题" aria-label="标题">H1</button>
+                        <button type="button" class="toolbar-btn" data-prefix="## " data-suffix="" title="二级标题" aria-label="二级标题">H2</button>
                         <button type="button" class="toolbar-btn" data-prefix="- " data-suffix="" title="无序列表" aria-label="无序列表">•</button>
                         <button type="button" class="toolbar-btn" data-prefix="> " data-suffix="" title="引用" aria-label="引用">”</button>
                         <button type="button" class="toolbar-btn" data-prefix="`" data-suffix="`" title="行内代码" aria-label="行内代码">&lt;/&gt;</button>

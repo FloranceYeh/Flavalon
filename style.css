@@ -1,23 +1,23 @@
 :root {
-    --bg-color: #f7f9fc;
+    --bg-color: #f2fbf5;  /* 浅浅的马卡龙绿背景 */
     --card-bg: #ffffff;
-    --text-primary: #333333;
-    --text-secondary: #777777;
-    --primary-color: #5c6ac4;
-    --primary-hover: #4b58a5;
-    --danger-color: #e57373;
-    --border-color: #eaeaea;
+    --text-primary: #2d4a36; /* 偏深的绿色字体 */
+    --text-secondary: #70917c;
+    --primary-color: #81c79a; /* 马卡龙主主题绿 */
+    --primary-hover: #6db186;
+    --danger-color: #e59188; /* 搭配柔和的警示色 */
+    --border-color: #e5f2ea;
     --border-radius: 12px;
 }
 
 body.dark-theme {
-    --bg-color: #121212;
-    --card-bg: #1e1e1e;
-    --text-primary: #e0e0e0;
-    --text-secondary: #aaaaaa;
-    --primary-color: #7986cb;
-    --primary-hover: #5c6bc0;
-    --border-color: #444444;
+    --bg-color: #0b1a11;  /* 深邃的墨绿背景 */
+    --card-bg: #142e1d;   /* 墨绿卡片 */
+    --text-primary: #d1ebd8;
+    --text-secondary: #84a690;
+    --primary-color: #4b825c; /* 暗色下的沉稳绿色 */
+    --primary-hover: #3c6e4e;
+    --border-color: #1e452e;
 }
 
 * {
@@ -28,12 +28,15 @@ body.dark-theme {
 }
 
 body {
-    background-color: var(--bg-color);
+    background: linear-gradient(135deg, var(--bg-color), var(--border-color));
+    background-size: 200% 200%;
     color: var(--text-primary);
     display: flex;
     justify-content: center;
     padding: 20px;
-    transition: background-color 0.3s, color 0.3s;
+    min-height: 100vh;
+    transition: color 0.3s;
+    animation: gradientFlow 12s ease infinite;
 }
 
 .container {
@@ -43,25 +46,59 @@ body {
     gap: 20px;
 }
 
+@keyframes fadeInRise {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .card {
     background: var(--card-bg);
     border-radius: var(--border-radius);
     padding: 20px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transition: background 0.3s, box-shadow 0.3s;
+    transition: background 0.3s, box-shadow 0.3s, transform 0.3s;
+    animation: fadeInRise 0.5s ease-out backwards;
 }
+
+.left-column .card:nth-child(1) { animation-delay: 0.1s; }
+.left-column .card:nth-child(2) { animation-delay: 0.2s; }
+.left-column .card:nth-child(3) { animation-delay: 0.3s; }
+.right-column .card:nth-child(1) { animation-delay: 0.2s; }
 
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, var(--primary-color), #8e99f3);
+    background: linear-gradient(135deg, var(--primary-color), #a2deba);  /* 马卡龙渐变 */
     color: white;
+    background-size: 200% 200%;
+    animation: gradientFlow 5s ease infinite, fadeInRise 0.5s ease-out backwards;
+}
+
+@keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .date-section h1 {
     font-size: 2.5rem;
     margin-bottom: 5px;
+}
+
+.title-section {
+    text-align: center;
+}
+
+.title-section .app-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.title-section .app-subtitle {
+    font-size: 1rem;
+    font-weight: 500;
 }
 
 .weather-section {
@@ -138,6 +175,7 @@ body {
 
 .calendar-header .icon-btn:hover {
     background-color: var(--border-color);
+    color: var(--primary-hover);
 }
 
 .calendar-weekdays {
@@ -179,20 +217,45 @@ body {
     color: var(--border-color);
 }
 
-.calendar-day.has-notes::after {
+.calendar-day.has-notes::after,
+.calendar-day.has-todos::before {
     content: '';
     position: absolute;
     bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
-    background-color: var(--danger-color);
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
 }
 
+.calendar-day.has-notes:not(.has-todos)::after {
+    background-color: var(--danger-color);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.calendar-day.has-todos:not(.has-notes)::before {
+    background-color: var(--primary-color);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.calendar-day.has-notes.has-todos::before {
+    background-color: var(--primary-color);
+    left: calc(50% - 6px);
+}
+.calendar-day.has-notes.has-todos::after {
+    background-color: var(--danger-color);
+    left: calc(50% + 3px);
+}
+
 .calendar-day.selected.has-notes::after {
-    background-color: white;
+    background-color: var(--danger-color);
+    box-shadow: 0 0 2px 1px var(--card-bg);
+}
+
+.calendar-day.selected.has-todos::before {
+    background-color: var(--primary-color);
+    box-shadow: 0 0 2px 1px var(--card-bg);
 }
 
 .notes-section {
@@ -379,9 +442,23 @@ button {
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-button:hover { background-color: var(--primary-hover); }
+button:hover { 
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(129, 199, 154, 0.3);
+}
+button:active {
+    transform: translateY(1px) scale(0.96);
+    box-shadow: none;
+}
+.icon-btn {
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.icon-btn:active {
+    transform: scale(0.9);
+}
 .danger-btn { background-color: var(--danger-color); }
 .danger-btn:hover { background-color: #d32f2f; }
 
@@ -392,16 +469,36 @@ button:hover { background-color: var(--primary-hover); }
     align-items: center;
     padding: 10px;
     border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+.todo-item:hover {
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    padding-left: 15px;
+    border-bottom-color: transparent;
 }
 .todo-item.completed span {
     text-decoration: line-through;
     color: var(--text-secondary);
+    transition: color 0.3s;
 }
 .todo-content {
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
+    transition: transform 0.2s;
+}
+.todo-item:active .todo-content {
+    transform: scale(0.98);
+}
+.todo-content input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    transform: scale(1.1);
+    transition: transform 0.2s;
+}
+.todo-content input[type="checkbox"]:active {
+    transform: scale(0.9);
 }
 .delete-btn {
     background: none;
