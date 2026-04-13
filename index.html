@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的主页 - 每一天都充满希望</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部信息：日期和天气 -->
+        <header class="header card">
+            <div class="date-section">
+                <h1 id="current-time">00:00</h1>
+                <p id="current-date">正在加载日期...</p>
+            </div>
+            <div class="weather-section">
+                <div id="weather-icon">🌤️</div>
+                <div id="weather-info">正在获取天气...</div>
+                <button id="get-weather-btn" class="icon-btn" title="点击获取定位天气">📍定位当前天气</button>
+            </div>
+        </header>
+
+        <!-- 主体内容 -->
+        <main class="main-content">
+            <!-- 待办事项模块 -->
+            <section class="todo-section card">
+                <h2>📝 待办事项</h2>
+                <div class="todo-input-group">
+                    <input type="text" id="todo-input" placeholder="添加新任务，按回车键保存...">
+                    <button id="add-todo-btn">添加</button>
+                </div>
+                <ul id="todo-list" class="todo-list">
+                    <!-- 待办事项将通过 JS 渲染在这里 -->
+                </ul>
+            </section>
+
+            <!-- 每日小记模块 -->
+            <section class="notes-section card">
+                <h2>📖 每日小记</h2>
+                <p class="notes-hint">写下今天的感悟吧，数据会自动保存在本地。</p>
+                <textarea id="daily-notes" placeholder="记录今天的美好..."></textarea>
+                <div class="notes-footer">
+                    <span id="save-status">已自动保存</span>
+                    <button id="clear-notes-btn" class="danger-btn">清空</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
