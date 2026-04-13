@@ -56,6 +56,29 @@
                         <!-- 日历格子通过 JS 渲染 -->
                     </div>
                 </section>
+
+                <!-- 数据管理模块 -->
+                <section class="data-section card">
+                    <div class="data-header-flex">
+                        <h2>⚙️ 数据管理</h2>
+                        <div class="data-tabs">
+                            <span id="tab-export" class="data-tab active">导出</span>
+                            <span id="tab-import" class="data-tab">导入</span>
+                        </div>
+                    </div>
+                    
+                    <div id="export-panel" class="data-btn-group">
+                        <button id="export-json-btn" class="export-btn" title="包含所有配置、待办和日记">📦 导出完整备份 (JSON)</button>
+                        <button id="export-all-md-btn" class="export-btn" title="将所有日记合并为一个Markdown文件">📚 导出所有小记 (MD)</button>
+                        <button id="export-day-md-btn" class="export-btn" title="仅导出当前选中日期的小记">📄 导出当前小记 (MD)</button>
+                    </div>
+
+                    <div id="import-panel" class="data-btn-group" style="display: none;">
+                        <p class="notes-hint" style="margin-bottom: 5px;">请选择导出的 .json 备份。导入将覆盖当前所有数据！</p>
+                        <input type="file" id="import-file" accept=".json" class="file-input">
+                        <button id="import-btn" class="danger-btn">⚠️ 确认覆盖导入</button>
+                    </div>
+                </section>
             </div>
 
             <div class="right-column">

@@ -37,7 +37,7 @@ body {
 }
 
 .container {
-    max-width: 900px;
+    width: 900px;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -246,6 +246,73 @@ body {
 
 .toolbar-btn:hover {
     background-color: var(--border-color);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.data-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.data-header-flex h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0;
+}
+
+.data-tabs {
+    display: flex;
+    gap: 5px;
+    background: var(--bg-color);
+    padding: 4px;
+    border-radius: var(--border-radius);
+}
+
+.data-tab {
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.data-tab.active {
+    background: var(--card-bg);
+    color: var(--primary-color);
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.data-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.file-input {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    padding-bottom: 5px;
+}
+
+.export-btn {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    text-align: left;
+    padding: 10px 12px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.export-btn:hover {
+    background-color: var(--card-bg);
     border-color: var(--primary-color);
     color: var(--primary-color);
 }

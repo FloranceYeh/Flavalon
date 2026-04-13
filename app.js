@@ -399,4 +399,130 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // === 5. 数据管理与导出 ===
+    function downloadFile(filename, content, type) {
+        const blob = new Blob([content], { type: type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // 5.1 导出所有数据为 JSON
+    document.getElementById('export-json-btn').addEventListener('click', () => {
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            // 过滤掉无关的外部/其它项目字段（如 docsify 字段）
+            if (key.startsWith('docsify.') || key.includes('search.index')) {
+                continue;
+            }
+            data[key] = localStorage.getItem(key);
+        }
+        const jsonStr = JSON.stringify(data, null, 2);
+        downloadFile(`flavalon_backup_${formatDateString(new Date())}.json`, jsonStr, 'application/json');
+    });
+
+    // 5.2 导出选定日期的小记为 MD
+    document.getElementById('export-day-md-btn').addEventListener('click', () => {
+        const content = notesEl.value;
+        if (!content.trim()) {
+            alert('当前日期没有记录内容哦，写点什么再导出吧！');
+            return;
+        }
+        
+        let mdContent = `# ${selectedDateStr} \n\n${content}`;
+        downloadFile(`note_${selectedDateStr}.md`, mdContent, 'text/markdown');
+    });
+
+    // 5.3 一键导出所有日期的小记为合并的 MD
+    document.getElementById('export-all-md-btn').addEventListener('click', () => {
+        let allNotes = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('notes_')) {
+                const date = key.replace('notes_', '');
+                const content = localStorage.getItem(key);
+                if (content && content.trim()) {
+                    allNotes.push({ date, content });
+                }
+            }
+        }
+        
+        if (allNotes.length === 0) {
+            alert('你还没有记录过任何小记哦！');
+            return;
+        }
+        
+        // 按照日期从新到老排序
+        allNotes.sort((a, b) => b.date.localeCompare(a.date));
+        
+        let mergedContent = `# Flavalon 全部小记汇总\n\n`;
+        mergedContent += `导出时间：${formatDateString(new Date())}\n\n`;
+        
+        allNotes.forEach(note => {
+            mergedContent += `---\n\n## ${note.date}\n\n${note.content}\n\n`;
+        });
+        
+        downloadFile(`all_notes_${formatDateString(new Date())}.md`, mergedContent, 'text/markdown');
+    });
+
+    // 5.4 导入导出切换与导入功能
+    const tabExport = document.getElementById('tab-export');
+    const tabImport = document.getElementById('tab-import');
+    const exportPanel = document.getElementById('export-panel');
+    const importPanel = document.getElementById('import-panel');
+    
+    tabExport.addEventListener('click', () => {
+        tabExport.classList.add('active');
+        tabImport.classList.remove('active');
+        exportPanel.style.display = 'flex';
+        importPanel.style.display = 'none';
+    });
+
+    tabImport.addEventListener('click', () => {
+        tabImport.classList.add('active');
+        tabExport.classList.remove('active');
+        importPanel.style.display = 'flex';
+        exportPanel.style.display = 'none';
+    });
+
+    document.getElementById('import-btn').addEventListener('click', () => {
+        const fileInput = document.getElementById('import-file');
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('请先选择一个 Flavalon 的 .json 备份文件！');
+            return;
+        }
+
+        if (!confirm('警告：导入备份将完全覆盖当前浏览器里的待办、日记和所有设置！确认继续吗？')) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                localStorage.clear(); // 清空当前所有缓存
+                
+                for (let key in data) {
+                    if (data.hasOwnProperty(key)) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                }
+                
+                alert('恢复备份成功！页面即将重新加载应用你的新数据。');
+                location.reload();
+            } catch (err) {
+                alert('导入失败，文件格式可能已损坏或不是合法的 JSON 文件！');
+                console.error(err);
+            }
+        };
+        reader.readAsText(file);
+    });
+
 });
