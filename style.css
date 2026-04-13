@@ -11,13 +11,13 @@
 }
 
 body.dark-theme {
-    --bg-color: #0b1a11;  /* 深邃的墨绿背景 */
-    --card-bg: #142e1d;   /* 墨绿卡片 */
+    --bg-color: #07120b;  /* 深邃的墨绿背景，加深对比 */
+    --card-bg: #21482e;   /* 墨绿卡片，提亮以增加区分度 */
     --text-primary: #d1ebd8;
     --text-secondary: #84a690;
     --primary-color: #4b825c; /* 暗色下的沉稳绿色 */
     --primary-hover: #3c6e4e;
-    --border-color: #1e452e;
+    --border-color: #4b6c58;
 }
 
 * {
@@ -27,7 +27,14 @@ body.dark-theme {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* 隐藏整体页面滚动条（支持绝大多数现代浏览器，但允许滚动） */
+html::-webkit-scrollbar {
+    display: none;
+}
+
 body {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
     background: linear-gradient(135deg, var(--bg-color), var(--border-color));
     background-size: 200% 200%;
     color: var(--text-primary);
@@ -402,6 +409,26 @@ body {
 #notes-preview {
     overflow-y: auto;
     display: none;
+}
+
+/* 针对小记专属的精美滚动条 */
+#daily-notes::-webkit-scrollbar,
+#notes-preview::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+#daily-notes::-webkit-scrollbar-track,
+#notes-preview::-webkit-scrollbar-track {
+    background: transparent;
+}
+#daily-notes::-webkit-scrollbar-thumb,
+#notes-preview::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 6px;
+}
+#daily-notes::-webkit-scrollbar-thumb:hover,
+#notes-preview::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary-color);
 }
 
 /* Markdown preview styles */
